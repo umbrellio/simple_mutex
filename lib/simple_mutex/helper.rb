@@ -10,7 +10,7 @@ class SimpleMutex::Helper
       new.get(lock_key)
     end
 
-    def list(options = {})
+    def list(**options)
       new.list(**options)
     end
   end

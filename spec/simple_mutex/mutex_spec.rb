@@ -21,14 +21,14 @@ RSpec.describe SimpleMutex::Mutex do
       it "creates instance with expected args" do
         allow(described_class).to receive(:new).and_call_original
         expect(described_class).to receive(:new).with(lock_key, **options)
-        described_class.lock(lock_key, options)
+        described_class.lock(lock_key, **options)
       end
 
       it "calls corresponding instance method" do
         instance = described_class.new(**options)
         allow(described_class).to receive(:new).with(lock_key, **options).and_return(instance)
         expect(instance).to receive("lock").with(no_args)
-        described_class.lock(lock_key, options)
+        described_class.lock(lock_key, **options)
       end
     end
 

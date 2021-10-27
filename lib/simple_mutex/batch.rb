@@ -18,7 +18,10 @@ module SimpleMutex
       self.lock_key = lock_key
       self.batch = Sidekiq::Batch.new
       self.mutex = SimpleMutex::Mutex.new(
-        lock_key, **mutex_options.merge(payload: generate_payload(batch))
+        lock_key,
+        **mutex_options.merge(
+          payload: generate_payload(batch),
+        ),
       )
     end
 

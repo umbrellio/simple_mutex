@@ -47,11 +47,11 @@ module SimpleMutex
     class << self
       attr_accessor :redis
 
-      def lock(lock_key, options = {})
+      def lock(lock_key, **options)
         new(lock_key, **options).lock
       end
 
-      def lock!(lock_key, options = {})
+      def lock!(lock_key, **options)
         new(lock_key, **options).lock!
       end
 
@@ -97,7 +97,7 @@ module SimpleMutex
         end
       end
 
-      def with_lock(lock_key, options = {}, &block)
+      def with_lock(lock_key, **options, &block)
         new(lock_key, **options).with_lock(&block)
       end
 
