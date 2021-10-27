@@ -1,0 +1,10 @@
+inherit_gem:
+  rubocop-config-umbrellio: lib/rubocop.yml
+
+Layout/AlignHash:
+  EnforcedHashRocketStyle:
+    - key
+    - table
+  EnforcedColonStyle:
+    - key
+    - table
