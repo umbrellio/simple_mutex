@@ -1,21 +1,23 @@
 # frozen_string_literal: true
 
-require "sidekiq/api"
-
-RSpec.describe SimpleMutex::JobCleaner do
+RSpec.describe SimpleMutex::SidekiqSupport::BatchCleaner do
   let(:redis)    { SimpleMutex.redis }
   let(:lock_key) { "batch_lock_key" }
-  let(:jid)      { SecureRandom.hex(8) }
+  let(:bid)      { SecureRandom.hex(8) }
 
   before do
-    workers_instance = instance_double(Sidekiq::Workers)
+    allow(SimpleMutex).to receive(:sidekiq_pro_installed?).and_return(true)
 
-    allow(workers_instance).to receive(:map).and_yield(1, 1, "payload" => { "jid" => jid })
+    batch_set_class = Class.new(Array)
 
-    allow(Sidekiq::Workers).to receive(:new).and_return(workers_instance)
+    stub_const("Sidekiq::BatchSet", batch_set_class)
+
+    allow(Sidekiq::BatchSet).to receive(:new).and_return(
+      Sidekiq::BatchSet.new([OpenStruct.new(bid: bid)]),
+    )
   end
 
-  describe "#unlock_dead_jobs" do
+  describe "#unlock_dead_batches" do
     around do |example|
       Timecop.freeze(Time.now) do
         redis.set(
@@ -24,9 +26,9 @@ RSpec.describe SimpleMutex::JobCleaner do
             "signature"  => SecureRandom.hex(8),
             "created_at" => Time.now.to_s,
             "payload"    => {
-              "type"       => "Job",
+              "type"       => "Batch",
               "started_at" => Time.now.to_s,
-              "jid"        => jid,
+              "bid"        => bid,
             },
           ),
           nx: true,
@@ -39,9 +41,9 @@ RSpec.describe SimpleMutex::JobCleaner do
             "signature"  => SecureRandom.hex(8),
             "created_at" => Time.now.to_s,
             "payload"    => {
-              "type"       => "Job",
+              "type"       => "Batch",
               "started_at" => Time.now.to_s,
-              "jid"        => "anotherjid123123",
+              "bid"        => "anotherbid123123",
             },
           ),
           nx: true,
@@ -54,8 +56,8 @@ RSpec.describe SimpleMutex::JobCleaner do
       redis.del("lock_key_2")
     end
 
-    it "removes lock for dead jobs" do
-      described_class.unlock_dead_jobs
+    it "removes lock for dead batches" do
+      described_class.unlock_dead_batches
 
       expect(redis.get("lock_key_1")).not_to eq(nil)
       expect(redis.get("lock_key_2")).to eq(nil)

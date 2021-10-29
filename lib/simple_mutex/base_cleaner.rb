@@ -3,7 +3,7 @@
 module SimpleMutex
   class BaseCleaner
     def unlock
-      SimpleMutex.redis_check!
+      ::SimpleMutex.redis_check!
 
       logger&.info(start_msg)
 
@@ -58,13 +58,14 @@ module SimpleMutex
 
     def active_entity_ids
       return @active_entity_ids if defined? @active_entity_ids
+
       @active_entity_ids = get_active_entity_ids
     end
 
     def log_iteration(lock_key, raw_data, return_value)
       log_msg = generate_log_msg(lock_key, raw_data, return_value)
 
-      if return_value&.first&.is_a?(Integer)
+      if return_value&.first.is_a?(Integer)
         logger.info(log_msg)
       else
         logger.error(log_msg)
@@ -86,11 +87,11 @@ module SimpleMutex
     end
 
     def redis
-      SimpleMutex.redis
+      ::SimpleMutex.redis
     end
 
     def logger
-      SimpleMutex.logger
+      ::SimpleMutex.logger
     end
   end
 end

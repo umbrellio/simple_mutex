@@ -2,21 +2,23 @@
 
 `SimpleMutex::Mutex` - Redis-based locks with ability to store custom data inside them.
 
-`SimpleMutex::Job` - class that generates locks for Sidekiq jobs using job's class name and
-params if needed.
+`SimpleMutex::SidekiqSupport::JobWrapper` - wrapper for Sidekiq jobs that generates locks using
+job's class name and arguments (optional)
 
-`SimpleMutex::Batch` - wrapper for Sidekiq Pro batches that use SimpleMutex::Mutex to prevent
-running multiple batch instances.
+`SimpleMutex:SidekiqSupport::JobMixin` - mixin for jobs with DSL simplifying usage
+of `SimpleMutex::Job`
 
-`SimpleMutex::JobCleaner` - cleaner for leftover locks created by SimpleMutex::Job if Sidekiq
-dies unexpectedly.
+`SimpleMutex::SidekiqSupport::JobCleaner` - cleaner for leftover locks created by SimpleMutex::Job
+if Sidekiq dies unexpectedly.
 
-`SimpleMutex::BatchCleaner` - cleaner for leftover lock created by SimpleMutex::Batch if Sidekiq
-dies unexpectedly.
+`SimpleMutex::SidekiqSupport::Batch` - wrapper for Sidekiq Pro batches that use SimpleMutex::Mutex
+to prevent running multiple batch instances.
+
+`SimpleMutex:SidekiqSupport::BatchCleaner` - cleaner for leftover lock created by SimpleMutex::Batch
+if Sidekiq dies unexpectedly.
 
 `SimpleMutex::Helper` - auxiliary class for debugging purposes. Allows to inspect existing locks.
 
-`SimpleMutex::JobMixin` - mixin for job classes with DSL simplifying usage of `SimpleMutex::Job`
 
 ## Configuration
 
@@ -43,7 +45,7 @@ When using gem with Ruby on Rails you can set those in initializers
 For any code block
 
 ```ruby
-  SimpleMutex::Mutex.with_lock("some_lock_key") do
+  SimpleMutex::Mutex.with_lock("some_lock_key", expires_in: 3600) do
     # your code
   end
 ```
@@ -51,7 +53,7 @@ For any code block
 Manually creating and deleting lock
 
 ```ruby
-  mutex = SimpleMutex::Mutex.new("some_lock_key")
+  mutex = SimpleMutex::Mutex.new("some_lock_key", expires_in: 3600)
   mutex.lock!
   # your code
   mutex.unlock!
@@ -98,18 +100,18 @@ You can get signature from instance if you want. By default it is UUID generated
   mutex.signature
 ```
 
-You can provide options like mutex TTL (`:expire`, in milliseconds) and payload
-(`payload`, pretty much anything, that can be serialized as JSON'ed, it will be stored in value
-of redis record)
+You can provide options like mutex TTL (`:expires_in`, number of seconds, or period with defined
+`#to_i`, like `1.hour`) and payload (`payload`, pretty much anything, that can be serialized as
+JSON'ed, it will be stored in value of redis record)
 
 ```ruby
-  mutex = SimpleMutex::Mutex.new("some_lock_key", expire: 2000, payload: { name: "MyCoolLock" })
+  mutex = SimpleMutex::Mutex.new("some_lock_key", expires_in: 3600, payload: { name: "MyCoolLock" })
   mutex.lock!
   # your code
   mutex.unlock!
 ```
 
-## SimpleMutex::Job Usage
+## SimpleMutex::SidekiqSupport::JobWrapper Usage
 
 This is class made to simplify usage for locking of sidekiq jobs. It will create lock with
 `lock_key` based on job's `class.name` and it's arguments if `lock_with_params: true`.
@@ -123,7 +125,7 @@ This is class made to simplify usage for locking of sidekiq jobs. It will create
         self,
         params:           args,
         lock_with_params: true,
-        mutex_ttl:        1 * 60 * 60,
+        expires_in:        1 * 60 * 60,
       ).with_redlock do
         # your code
       end
@@ -133,17 +135,17 @@ This is class made to simplify usage for locking of sidekiq jobs. It will create
 
 `params` will be used to generate `lock_key` if `lock_with_params: true`.
 
-`mutex_ttl` is in seconds.
+`expires_in` is in seconds.
 
-## SimpleMutex::Batch Usage
+## SimpleMutex::SidekiqSupport::Batch Usage
 
 This is wrapper for `Sidekiq::Batch` (from Sidekiq Pro) that helps to prevent running two
 similar batches.
 
 ```ruby
-  batch = SimpleMutex::Batch.new(
+  batch = SimpleMutex::SidekiqSupport::Batch.new(
       lock_key: "my_batch",
-      mutex_options: { expire: 23.hours.to_i * 1000 },
+      expires_in: 23.hours.to_i,
     )
 
     batch.description = "batch of MyJobs"
@@ -159,23 +161,23 @@ similar batches.
 
 `mutex_options` are forwaded to SimpleMutex::Mutex as is. So `expire` is in miliseconds.
 
-## SimpleMutex::JobCleaner Usage
+## SimpleMutex::SidekiqSupport::JobCleaner Usage
 
-If you use SimpleMutex for locking jobs via `SimpleMutex::Job`, when Sidekiq dies
+If you use SimpleMutex for locking jobs via `SimpleMutex::SidekiqSupport::Job`, when Sidekiq dies
 unexpectedely, there can be leftover mutexes for dead jobs. To delete them you can use:
 
 ```ruby
-  SimpleMutex::JobCleaner.unlock_dead_jobs
+  SimpleMutex::SidekiqSupport::JobCleaner.unlock_dead_jobs
 ```
 
 
-## SimpleMutex::BatchCleaner Usage
+## SimpleMutex::SidekiqSupport::BatchCleaner Usage
 
-If you use SimpleMutex for locking Batches via `SimpleMutex::Batch`, when Sidekiq dies
-unexpectedely, there can be leftover mutexes for dead batches. To delete them you can use:
+If you use SimpleMutex for locking Batches via `SimpleMutex::SidekiqSupport::Batch`, when Sidekiq
+dies unexpectedely, there can be leftover mutexes for dead batches. To delete them you can use:
 
 ```ruby
-  SimpleMutex::BatchCleaner.unlock_dead_batches
+  SimpleMutex::SidekiqSupport::BatchCleaner.unlock_dead_batches
 ```
 
 ## SimpleMutex::Helper Usage
@@ -198,14 +200,14 @@ SimpleMutex::Helper.list(mode: :default)
 * `:batch`   - batch locks
 * `:default` - job and batch locks
 
-## SimpleMutex::JobMixin Usage
+## SimpleMutex::SidekiqSupport::JobMixin Usage
 
 Base Job class
 
 ```ruby
 class ApplicationJob
   include Sidekiq::Worker
-  include SimpleMutex::JobMixin
+  include SimpleMutex::SidekiqSupport::JobMixin
 
   class << self
     def inherited(job_class)

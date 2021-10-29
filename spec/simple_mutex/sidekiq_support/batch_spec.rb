@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe SimpleMutex::Batch do
+RSpec.describe SimpleMutex::SidekiqSupport::Batch do
   let(:redis) { SimpleMutex.redis }
 
   include_context "batch_stub"
@@ -14,9 +14,9 @@ RSpec.describe SimpleMutex::Batch do
     let(:lock_key) { "batch_lock_key" }
 
     let(:batch) do
-      batch = SimpleMutex::Batch.new(
+      batch = SimpleMutex::SidekiqSupport::Batch.new(
         lock_key: lock_key,
-        mutex_options: { expire: 60 * 1000 },
+        expires_in: 60 * 1000,
       )
 
       batch.description = "TestBatch"
@@ -74,8 +74,11 @@ RSpec.describe SimpleMutex::Batch do
         expect_any_instance_of(CallbackTarget).not_to receive(:on_complete)
         expect_any_instance_of(CallbackTarget).not_to receive(:on_success)
         expect_any_instance_of(CallbackTarget).not_to receive(:on_death)
-        expect_any_instance_of(SimpleMutex::BatchCallbacks).not_to receive(:on_success)
-        expect_any_instance_of(SimpleMutex::BatchCallbacks).not_to receive(:on_death)
+
+        expect_any_instance_of(SimpleMutex::SidekiqSupport::BatchCallbacks)
+          .not_to receive(:on_success)
+        expect_any_instance_of(SimpleMutex::SidekiqSupport::BatchCallbacks)
+          .not_to receive(:on_death)
         begin
           batch.jobs do
             expect(JSON.parse(redis.get(lock_key))["payload"]).to eq(expected_payload)
@@ -90,7 +93,7 @@ RSpec.describe SimpleMutex::Batch do
       it "raises error" do
         expect do
           batch.jobs { nil }
-        end.to raise_error(SimpleMutex::Batch::Error)
+        end.to raise_error(SimpleMutex::SidekiqSupport::Batch::Error)
       end
     end
   end

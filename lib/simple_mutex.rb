@@ -6,13 +6,13 @@ module SimpleMutex
 
   require_relative "simple_mutex/base_cleaner"
 
-  require_relative "simple_mutex/job"
-  require_relative "simple_mutex/job_cleaner"
-  require_relative "simple_mutex/job_mixin"
+  require_relative "simple_mutex/sidekiq_support/job_wrapper"
+  require_relative "simple_mutex/sidekiq_support/job_cleaner"
+  require_relative "simple_mutex/sidekiq_support/job_mixin"
 
-  require_relative "simple_mutex/batch"
-  require_relative "simple_mutex/batch_callbacks"
-  require_relative "simple_mutex/batch_cleaner"
+  require_relative "simple_mutex/sidekiq_support/batch"
+  require_relative "simple_mutex/sidekiq_support/batch_callbacks"
+  require_relative "simple_mutex/sidekiq_support/batch_cleaner"
 
   require_relative "simple_mutex/helper"
 

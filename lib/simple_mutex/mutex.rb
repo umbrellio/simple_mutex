@@ -5,23 +5,7 @@ require "json"
 
 module SimpleMutex
   class Mutex
-    # lock_key => string identifying resource to be locked
-    # options  => hash with options
-    #   :expire    => Integer. How many milliseconds until lock will be forcefully removed (TTL).
-    #   :signature => String. Used do determine ownership of lock.
-    #   :payload   => Anything you want to store with lock.
-
-    BaseError = Class.new(::StandardError) do
-      attr_reader :lock_key
-
-      def initialize(msg, lock_key)
-        @lock_key = lock_key
-        super(msg)
-      end
-    end
-
-    LockError   = Class.new(BaseError)
-    UnlockError = Class.new(BaseError)
+    DEFAULT_EXPIRES_IN = 60 * 60 # 1 hour
 
     ERR_MSGS = {
       unlock: {
@@ -42,7 +26,17 @@ module SimpleMutex
       }.freeze,
     }.freeze
 
-    DEFAULT_EXPIRE = 1000
+    BaseError = Class.new(::StandardError) do
+      attr_reader :lock_key
+
+      def initialize(msg, lock_key)
+        @lock_key = lock_key
+        super(msg)
+      end
+    end
+
+    LockError   = Class.new(BaseError)
+    UnlockError = Class.new(BaseError)
 
     class << self
       attr_accessor :redis
@@ -55,11 +49,10 @@ module SimpleMutex
         new(lock_key, **options).lock!
       end
 
-      # force: true allows to delete lock ignoring ownership (without knowing signature)
       def unlock(lock_key, signature: nil, force: false)
-        SimpleMutex.redis_check!
+        ::SimpleMutex.redis_check!
 
-        redis = SimpleMutex.redis
+        redis = ::SimpleMutex.redis
 
         redis.watch(lock_key) do
           raw_data = redis.get(lock_key)
@@ -74,9 +67,9 @@ module SimpleMutex
       end
 
       def unlock!(lock_key, signature: nil, force: false)
-        SimpleMutex.redis_check!
+        ::SimpleMutex.redis_check!
 
-        redis = SimpleMutex.redis
+        redis = ::SimpleMutex.redis
 
         redis.watch(lock_key) do
           raw_data = redis.get(lock_key)
@@ -109,22 +102,22 @@ module SimpleMutex
       end
     end
 
-    attr_reader :lock_key, :expire, :signature, :payload
+    attr_reader :lock_key, :expires_in, :signature, :payload
 
     def initialize(lock_key,
-                   expire:    DEFAULT_EXPIRE,
-                   signature: SecureRandom.uuid,
-                   payload:   nil)
-      SimpleMutex.redis_check!
+                   expires_in: DEFAULT_EXPIRES_IN,
+                   signature:  SecureRandom.uuid,
+                   payload:    nil)
+      ::SimpleMutex.redis_check!
 
-      self.lock_key  = lock_key
-      self.expire    = expire
-      self.signature = signature
-      self.payload   = payload
+      self.lock_key    = lock_key
+      self.expires_in  = expires_in.to_i
+      self.signature   = signature
+      self.payload     = payload
     end
 
     def lock
-      !!redis.set(lock_key, generate_data, nx: true, px: expire)
+      !!redis.set(lock_key, generate_data, nx: true, ex: expires_in)
     end
 
     def unlock(force: false)
@@ -155,7 +148,7 @@ module SimpleMutex
 
     private
 
-    attr_writer :lock_key, :expire, :signature, :payload
+    attr_writer :lock_key, :expires_in, :signature, :payload
 
     def generate_data
       JSON.generate(
@@ -166,7 +159,7 @@ module SimpleMutex
     end
 
     def redis
-      SimpleMutex.redis
+      ::SimpleMutex.redis
     end
 
     def raise_error(error_class, msg_template)
