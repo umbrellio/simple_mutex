@@ -57,7 +57,7 @@ module SimpleMutex
         redis.watch(lock_key) do
           raw_data = redis.get(lock_key)
 
-          if raw_data && (force || JSON.parse(raw_data)["signature"] == signature)
+          if raw_data && (force || signature_valid?(raw_data, signature))
             redis.multi { |multi| multi.del(lock_key) }.first.positive?
           else
             redis.unwatch
@@ -77,7 +77,7 @@ module SimpleMutex
           begin
             raise_error(UnlockError, :key_not_found, lock_key) unless raw_data
 
-            unless force || JSON.parse(raw_data)["signature"] == signature
+            unless force || signature_valid?(raw_data, signature)
               raise_error(UnlockError, :signature_mismatch, lock_key)
             end
 
@@ -99,6 +99,14 @@ module SimpleMutex
         error_msg     = ERR_MSGS[template_base][msg_template].call(lock_key)
 
         raise(error_class.new(error_msg, lock_key))
+      end
+
+      def signature_valid?(raw_data, signature)
+        return false if raw_data.nil?
+
+        JSON.parse(raw_data)["signature"] == signature
+      rescue JSON::ParseError, TypeError
+        false
       end
     end
 
@@ -134,8 +142,8 @@ module SimpleMutex
       end
     end
 
-    def locked?
-      !redis.get(lock_key).nil?
+    def lock_obtained?
+      self.class.signature_valid?(redis.get(lock_key), signature)
     end
 
     def lock!

@@ -44,12 +44,14 @@ module SimpleMutex
       def with_redlock(args = [], &block)
         return yield unless self.class.locking?
 
-        ::SimpleMutex::SidekiqSupport::Job.new(
-          self,
+        options = {
           params:           args,
           lock_with_params: self.class.lock_with_params?,
-          mutex_ttl:        self.class.job_timeout,
-        ).with_redlock(&block)
+        }
+
+        options[:expires_in] = self.class.job_timeout if self.class.job_timeout.present?
+
+        ::SimpleMutex::SidekiqSupport::Job.new(self, **options).with_redlock(&block)
       rescue SimpleMutex::Mutex::LockError => error
         process_locking_error(error)
       end

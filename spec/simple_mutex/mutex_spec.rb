@@ -104,7 +104,7 @@ RSpec.describe SimpleMutex::Mutex do
           end
         end
 
-        context "when called with existing lock_key, ivalid signature, no force" do
+        context "when called with existing lock_key, invalid signature, no force" do
           it "does not delete key, returns false" do
             result = described_class.unlock(lock_key, signature: invalid_signature, force: false)
             expect(result).to eq(false)
@@ -137,7 +137,7 @@ RSpec.describe SimpleMutex::Mutex do
           end
         end
 
-        context "when called with existing lock_key, ivalid signature, no force" do
+        context "when called with existing lock_key, invalid signature, no force" do
           it "raises error" do
             expect do
               described_class.unlock!(lock_key, signature: invalid_signature, force: false)
@@ -148,7 +148,7 @@ RSpec.describe SimpleMutex::Mutex do
           end
         end
 
-        context "when called with existing lock_key, ivalid signature, force" do
+        context "when called with existing lock_key, invalid signature, force" do
           it "removes key" do
             described_class.unlock!(lock_key, signature: invalid_signature, force: true)
             expect(redis.get(lock_key)).to eq(nil)

@@ -39,14 +39,16 @@ RSpec.describe SimpleMutex::SidekiqSupport::Batch do
       redis.del(lock_key)
     end
 
-    context "when jobs execute succesfully" do
+    context "when jobs execute successfully" do
       it "runs success and complete callbacks" do
         expect_any_instance_of(CallbackTarget).to receive(:on_complete)
         expect_any_instance_of(CallbackTarget).to receive(:on_success)
         expect_any_instance_of(CallbackTarget).not_to receive(:on_death)
+
         batch.jobs do
           expect(JSON.parse(redis.get(lock_key))["payload"]).to eq(expected_payload)
         end
+
         expect(redis.get(lock_key)).to eq(nil)
       end
     end
@@ -56,21 +58,23 @@ RSpec.describe SimpleMutex::SidekiqSupport::Batch do
         expect_any_instance_of(CallbackTarget).not_to receive(:on_complete)
         expect_any_instance_of(CallbackTarget).not_to receive(:on_success)
         expect_any_instance_of(CallbackTarget).to receive(:on_death)
+
         batch.jobs do
           expect(JSON.parse(redis.get(lock_key))["payload"]).to eq(expected_payload)
           raise StandardError
         end
+
         expect(redis.get(lock_key)).to eq(nil)
       end
     end
 
-    context "when no batch started withoud jobs" do
+    context "when batch started without jobs" do
       before do
         allow_any_instance_of(Sidekiq::Batch).to receive(:jobs_count).and_return(0)
         allow_any_instance_of(Sidekiq::Batch::Status).to receive(:total).and_return(0)
       end
 
-      it "removes key manually" do
+      it "removes key" do
         expect_any_instance_of(CallbackTarget).not_to receive(:on_complete)
         expect_any_instance_of(CallbackTarget).not_to receive(:on_success)
         expect_any_instance_of(CallbackTarget).not_to receive(:on_death)
@@ -79,6 +83,7 @@ RSpec.describe SimpleMutex::SidekiqSupport::Batch do
           .not_to receive(:on_success)
         expect_any_instance_of(SimpleMutex::SidekiqSupport::BatchCallbacks)
           .not_to receive(:on_death)
+
         begin
           batch.jobs do
             expect(JSON.parse(redis.get(lock_key))["payload"]).to eq(expected_payload)

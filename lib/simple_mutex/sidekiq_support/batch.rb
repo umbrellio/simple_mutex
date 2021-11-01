@@ -5,11 +5,13 @@ require "forwardable"
 module SimpleMutex
   module SidekiqSupport
     class Batch
+      extend Forwardable
+
+      DEFAULT_EXPIRES_IN = 6 * 60 * 60
+
       class Error < StandardError; end
 
       attr_reader :batch, :lock_key, :expires_in
-
-      extend Forwardable
 
       def_delegators :@batch, :on, :bid, :description, :description=
 
