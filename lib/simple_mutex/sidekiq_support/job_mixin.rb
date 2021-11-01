@@ -49,9 +49,9 @@ module SimpleMutex
           lock_with_params: self.class.lock_with_params?,
         }
 
-        options[:expires_in] = self.class.job_timeout if self.class.job_timeout.present?
+        options[:expires_in] = self.class.job_timeout unless self.class.job_timeout.nil?
 
-        ::SimpleMutex::SidekiqSupport::Job.new(self, **options).with_redlock(&block)
+        ::SimpleMutex::SidekiqSupport::JobWrapper.new(self, **options).with_redlock(&block)
       rescue SimpleMutex::Mutex::LockError => error
         process_locking_error(error)
       end
