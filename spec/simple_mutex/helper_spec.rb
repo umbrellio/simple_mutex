@@ -78,7 +78,6 @@ RSpec.describe SimpleMutex::Helper do
     end
   end
 
-  # rubocop:disable Style/BracesAroundHashParameters
   describe "#list" do
     context "when mode: :default" do
       it "works" do
@@ -131,5 +130,4 @@ RSpec.describe SimpleMutex::Helper do
       end
     end
   end
-  # rubocop:enable Style/BracesAroundHashParameters
 end

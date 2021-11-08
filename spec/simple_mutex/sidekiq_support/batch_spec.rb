@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe SimpleMutex::Batch do
+RSpec.describe SimpleMutex::SidekiqSupport::Batch do
   let(:redis) { SimpleMutex.redis }
 
   include_context "batch_stub"
@@ -14,9 +14,9 @@ RSpec.describe SimpleMutex::Batch do
     let(:lock_key) { "batch_lock_key" }
 
     let(:batch) do
-      batch = SimpleMutex::Batch.new(
+      batch = SimpleMutex::SidekiqSupport::Batch.new(
         lock_key: lock_key,
-        mutex_options: { expire: 60 * 1000 },
+        expires_in: 60 * 1000,
       )
 
       batch.description = "TestBatch"
@@ -39,14 +39,16 @@ RSpec.describe SimpleMutex::Batch do
       redis.del(lock_key)
     end
 
-    context "when jobs execute succesfully" do
+    context "when jobs execute successfully" do
       it "runs success and complete callbacks" do
         expect_any_instance_of(CallbackTarget).to receive(:on_complete)
         expect_any_instance_of(CallbackTarget).to receive(:on_success)
         expect_any_instance_of(CallbackTarget).not_to receive(:on_death)
+
         batch.jobs do
           expect(JSON.parse(redis.get(lock_key))["payload"]).to eq(expected_payload)
         end
+
         expect(redis.get(lock_key)).to eq(nil)
       end
     end
@@ -56,26 +58,32 @@ RSpec.describe SimpleMutex::Batch do
         expect_any_instance_of(CallbackTarget).not_to receive(:on_complete)
         expect_any_instance_of(CallbackTarget).not_to receive(:on_success)
         expect_any_instance_of(CallbackTarget).to receive(:on_death)
+
         batch.jobs do
           expect(JSON.parse(redis.get(lock_key))["payload"]).to eq(expected_payload)
           raise StandardError
         end
+
         expect(redis.get(lock_key)).to eq(nil)
       end
     end
 
-    context "when no batch started withoud jobs" do
+    context "when batch started without jobs" do
       before do
         allow_any_instance_of(Sidekiq::Batch).to receive(:jobs_count).and_return(0)
         allow_any_instance_of(Sidekiq::Batch::Status).to receive(:total).and_return(0)
       end
 
-      it "removes key manually" do
+      it "removes key" do
         expect_any_instance_of(CallbackTarget).not_to receive(:on_complete)
         expect_any_instance_of(CallbackTarget).not_to receive(:on_success)
         expect_any_instance_of(CallbackTarget).not_to receive(:on_death)
-        expect_any_instance_of(SimpleMutex::BatchCallbacks).not_to receive(:on_success)
-        expect_any_instance_of(SimpleMutex::BatchCallbacks).not_to receive(:on_death)
+
+        expect_any_instance_of(SimpleMutex::SidekiqSupport::BatchCallbacks)
+          .not_to receive(:on_success)
+        expect_any_instance_of(SimpleMutex::SidekiqSupport::BatchCallbacks)
+          .not_to receive(:on_death)
+
         begin
           batch.jobs do
             expect(JSON.parse(redis.get(lock_key))["payload"]).to eq(expected_payload)
@@ -90,7 +98,7 @@ RSpec.describe SimpleMutex::Batch do
       it "raises error" do
         expect do
           batch.jobs { nil }
-        end.to raise_error(SimpleMutex::Batch::Error)
+        end.to raise_error(SimpleMutex::SidekiqSupport::Batch::Error)
       end
     end
   end

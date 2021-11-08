@@ -2,10 +2,10 @@
 
 require "sidekiq/worker"
 
-RSpec.describe SimpleMutex::Job do
-  let(:redis) { SimpleMutex.redis }
-  let(:jid) { "08e6a309cf7c46dc0178c53f" }
-  let(:in_job_test_suite) { -> { nil } }
+RSpec.describe SimpleMutex::SidekiqSupport::JobWrapper do
+  let(:redis)             { SimpleMutex.redis }
+  let(:jid)               { "08e6a309cf7c46dc0178c53f" }
+  let(:in_job_test_suite) { -> {} }
 
   let(:job) do
     klass = Class.new do
@@ -30,7 +30,7 @@ RSpec.describe SimpleMutex::Job do
   end
 
   describe "#with_redlock" do
-    let(:params) { [1, nil, "qwe"] }
+    let(:params)   { [1, nil, "qwe"] }
     let(:lock_key) { "TestJob<[1,null,\"qwe\"]>" }
 
     let(:in_job_test_suite) do
@@ -50,11 +50,11 @@ RSpec.describe SimpleMutex::Job do
     end
 
     it "creates mutex that exists while block is executed" do
-      SimpleMutex::Job.new(
+      described_class.new(
         job,
         params:           params,
         lock_with_params: true,
-        mutex_ttl:        60,
+        expires_in:       60,
       ).with_redlock do
         job.run_tests
       end
@@ -66,11 +66,11 @@ RSpec.describe SimpleMutex::Job do
       let(:lock_key) { "overriden" }
 
       it "created mutex with overriden lock_key" do
-        SimpleMutex::Job.new(
+        described_class.new(
           job,
-          params:    params,
-          lock_key:  lock_key,
-          mutex_ttl: 60,
+          params:     params,
+          lock_key:   lock_key,
+          expires_in: 60,
         ).with_redlock do
           job.run_tests
         end

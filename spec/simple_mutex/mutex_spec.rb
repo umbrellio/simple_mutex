@@ -5,7 +5,7 @@ RSpec.describe SimpleMutex::Mutex do
   let(:lock_key) { "test_lock_key" }
 
   let(:options) do
-    { expire: 60, payload: ["test_payload"] }
+    { expires_in: 60, payload: ["test_payload"] }
   end
 
   let(:redis) { SimpleMutex.redis }
@@ -21,14 +21,17 @@ RSpec.describe SimpleMutex::Mutex do
       it "creates instance with expected args" do
         allow(described_class).to receive(:new).and_call_original
         expect(described_class).to receive(:new).with(lock_key, **options)
-        described_class.lock(lock_key, options)
+
+        described_class.lock(lock_key, **options)
       end
 
       it "calls corresponding instance method" do
-        instance = described_class.new(**options)
+        instance = instance_double(described_class)
+
         allow(described_class).to receive(:new).with(lock_key, **options).and_return(instance)
         expect(instance).to receive("lock").with(no_args)
-        described_class.lock(lock_key, options)
+
+        described_class.lock(lock_key, **options)
       end
     end
 
@@ -36,19 +39,22 @@ RSpec.describe SimpleMutex::Mutex do
       it "creates instance with expected args" do
         allow(described_class).to receive(:new).and_call_original
         expect(described_class).to receive(:new).with(lock_key, **options)
-        described_class.lock!(lock_key, options)
+
+        described_class.lock!(lock_key, **options)
       end
 
       it "calls corresponding instance method" do
-        instance = described_class.new(**options)
+        instance = instance_double(described_class)
+
         allow(described_class).to receive(:new).with(lock_key, **options).and_return(instance)
         expect(instance).to receive("lock!").with(no_args)
-        described_class.lock!(lock_key, options)
+
+        described_class.lock!(lock_key, **options)
       end
     end
 
     describe "#with_lock" do
-      let(:block_proc) { proc { nil } }
+      let(:block_proc) { proc {} }
 
       it "creates instance with expected args" do
         allow(described_class).to receive(:new).and_call_original
@@ -58,7 +64,7 @@ RSpec.describe SimpleMutex::Mutex do
       end
 
       it "calls corresponding instance method" do
-        instance = described_class.new(**options)
+        instance = instance_double(described_class)
 
         allow(described_class).to receive(:new).with(lock_key, **options).and_return(instance)
 
@@ -84,7 +90,7 @@ RSpec.describe SimpleMutex::Mutex do
       end
 
       around do |example|
-        redis.set(lock_key, data, nx: true, px: 60 * 1000)
+        redis.set(lock_key, data, nx: true, ex: 60)
         example.run
         redis.del(lock_key)
       end
@@ -98,7 +104,7 @@ RSpec.describe SimpleMutex::Mutex do
           end
         end
 
-        context "when called with existing lock_key, ivalid signature, no force" do
+        context "when called with existing lock_key, invalid signature, no force" do
           it "does not delete key, returns false" do
             result = described_class.unlock(lock_key, signature: invalid_signature, force: false)
             expect(result).to eq(false)
@@ -131,7 +137,7 @@ RSpec.describe SimpleMutex::Mutex do
           end
         end
 
-        context "when called with existing lock_key, ivalid signature, no force" do
+        context "when called with existing lock_key, invalid signature, no force" do
           it "raises error" do
             expect do
               described_class.unlock!(lock_key, signature: invalid_signature, force: false)
@@ -142,7 +148,7 @@ RSpec.describe SimpleMutex::Mutex do
           end
         end
 
-        context "when called with existing lock_key, ivalid signature, force" do
+        context "when called with existing lock_key, invalid signature, force" do
           it "removes key" do
             described_class.unlock!(lock_key, signature: invalid_signature, force: true)
             expect(redis.get(lock_key)).to eq(nil)
@@ -167,7 +173,7 @@ RSpec.describe SimpleMutex::Mutex do
     let(:options) { super().merge(signature: "test_signature") }
 
     let(:instance) do
-      described_class.new(lock_key, options)
+      described_class.new(lock_key, **options)
     end
 
     let(:expected_data) do
@@ -193,7 +199,7 @@ RSpec.describe SimpleMutex::Mutex do
 
       context "when lock aready exists" do
         before do
-          redis.set(lock_key, "old_data", nx: true, px: 60 * 1000)
+          redis.set(lock_key, "old_data", nx: true, ex: 60)
         end
 
         it "does not overwrite existing lock, returns false" do
@@ -214,7 +220,7 @@ RSpec.describe SimpleMutex::Mutex do
 
       context "when lock aready exists" do
         before do
-          redis.set(lock_key, "old_data", nx: true, px: 60 * 1000)
+          redis.set(lock_key, "old_data", nx: true, ex: 60)
         end
 
         it "raises error" do
