@@ -105,7 +105,7 @@ module SimpleMutex
         return false if raw_data.nil?
 
         JSON.parse(raw_data)["signature"] == signature
-      rescue JSON::ParseError, TypeError
+      rescue JSON::ParserError, TypeError
         false
       end
     end

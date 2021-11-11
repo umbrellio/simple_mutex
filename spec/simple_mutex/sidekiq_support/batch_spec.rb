@@ -3,12 +3,9 @@
 RSpec.describe SimpleMutex::SidekiqSupport::Batch do
   let(:redis) { SimpleMutex.redis }
 
+  include_context "sidekiq pro defined"
   include_context "batch_stub"
   include_context "callback_target_stub"
-
-  before do
-    allow(SimpleMutex).to receive(:sidekiq_pro_installed?).and_return(true)
-  end
 
   describe "" do
     let(:lock_key) { "batch_lock_key" }
@@ -53,16 +50,36 @@ RSpec.describe SimpleMutex::SidekiqSupport::Batch do
       end
     end
 
+    # we imitate Sidekiq::Batch behavior when jobs fail using JobExecutionError
     context "when jobs fail" do
-      it "runs death callback" do
+      it "mutex removed via death callback" do
         expect_any_instance_of(CallbackTarget).not_to receive(:on_complete)
         expect_any_instance_of(CallbackTarget).not_to receive(:on_success)
         expect_any_instance_of(CallbackTarget).to receive(:on_death)
 
         batch.jobs do
           expect(JSON.parse(redis.get(lock_key))["payload"]).to eq(expected_payload)
-          raise StandardError
+
+          raise Sidekiq::Batch::JobExecutionError
         end
+
+        expect(redis.get(lock_key)).to eq(nil)
+      end
+    end
+
+    context "when error happens when generating jobs" do
+      it "mutex removes via rescue" do
+        expect_any_instance_of(CallbackTarget).not_to receive(:on_complete)
+        expect_any_instance_of(CallbackTarget).not_to receive(:on_success)
+        expect_any_instance_of(CallbackTarget).not_to receive(:on_death)
+
+        expect do
+          batch.jobs do
+            expect(JSON.parse(redis.get(lock_key))["payload"]).to eq(expected_payload)
+
+            raise StandardError
+          end
+        end.to raise_error(StandardError)
 
         expect(redis.get(lock_key)).to eq(nil)
       end
@@ -89,7 +106,7 @@ RSpec.describe SimpleMutex::SidekiqSupport::Batch do
             expect(JSON.parse(redis.get(lock_key))["payload"]).to eq(expected_payload)
             nil
           end
-        rescue
+        rescue SimpleMutex::SidekiqSupport::Batch::Error
           nil
         end
         expect(redis.get(lock_key)).to eq(nil)

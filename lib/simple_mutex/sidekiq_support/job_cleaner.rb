@@ -19,7 +19,7 @@ module SimpleMutex
         %w[payload jid]
       end
 
-      def active_entity_ids
+      def get_active_entity_ids
         ::Sidekiq::Workers.new.map { |_pid, _tid, work| work["payload"]["jid"] }
       end
     end

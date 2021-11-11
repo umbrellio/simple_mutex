@@ -8,6 +8,8 @@ RSpec.shared_context "batch_stub" do
       attr_reader :bid
 
       # rubocop:disable RSpec/LeakyConstantDeclaration
+      self::JobExecutionError = Class.new(StandardError)
+
       self::Status = Class.new do
         attr_reader :bid
 
@@ -36,7 +38,7 @@ RSpec.shared_context "batch_stub" do
         yield
         execute_callbacks(:complete)
         execute_callbacks(:success)
-      rescue
+      rescue self.class::JobExecutionError
         execute_callbacks(:death)
       end
 
