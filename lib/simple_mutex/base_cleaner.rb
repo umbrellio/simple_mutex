@@ -38,23 +38,9 @@ module SimpleMutex
       active_entity_ids.include?(entity_id)
     end
 
-    # :nocov:
-    def type
-      raise NoMethodError
-    end
-    # :nocov:
-
-    # :nocov:
-    def path_to_entity_id
-      raise NoMethodError
-    end
-    # :nocov:
-
-    # :nocov:
-    def get_active_entity_ids
-      raise NoMethodError
-    end
-    # :nocov:
+    # @!method type
+    # @!method path_to_entity_id
+    # @!method get_active_entity_ids
 
     def safe_parse(raw_data)
       JSON.parse(raw_data)
