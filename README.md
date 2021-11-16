@@ -1,4 +1,6 @@
-# SimpleMutex
+
+# SimpleMutex &middot; [![Gem Version](https://badge.fury.io/rb/simple_mutex.svg)](https://badge.fury.io/rb/simple_mutex) [![Coverage Status](https://coveralls.io/repos/github/umbrellio/simple_mutex/badge.svg?branch=main)](https://coveralls.io/github/umbrellio/simple_mutex?branch=main)
+
 
 `SimpleMutex::Mutex` - Redis-based locks with ability to store custom data inside them.
 

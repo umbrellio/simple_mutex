@@ -21,11 +21,11 @@ module SimpleMutex
 
           next redis.unwatch if entity_id.nil? || active?(entity_id)
 
-          return_value = redis.multi { redis.del(lock_key) }
+          return_value = redis.multi { |multi| multi.del(lock_key) }
 
           log_iteration(lock_key, raw_data, return_value) unless logger.nil?
 
-          return_value.first.positive?
+          return_value&.first&.positive?
         end
       end
 
@@ -38,17 +38,9 @@ module SimpleMutex
       active_entity_ids.include?(entity_id)
     end
 
-    def type
-      raise NoMethodError
-    end
-
-    def path_to_entity_id
-      raise NoMethodError
-    end
-
-    def get_active_entity_ids
-      raise NoMethodError
-    end
+    # @!method type
+    # @!method path_to_entity_id
+    # @!method get_active_entity_ids
 
     def safe_parse(raw_data)
       JSON.parse(raw_data)
@@ -65,11 +57,12 @@ module SimpleMutex
     def log_iteration(lock_key, raw_data, return_value)
       log_msg = generate_log_msg(lock_key, raw_data, return_value)
 
-      if return_value&.first.is_a?(Integer)
-        logger.info(log_msg)
-      else
-        logger.error(log_msg)
+      # should not happen, but we encountered this few times long time ago
+      unless return_value&.first.is_a?(Integer)
+        return logger.error(log_msg)
       end
+
+      return_value&.first&.positive? ? logger.info(log_msg) : logger.warn(log_msg)
     end
 
     def start_msg

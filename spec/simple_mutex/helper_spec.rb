@@ -61,12 +61,20 @@ RSpec.describe SimpleMutex::Helper do
         px: 60 * 1000,
       )
 
+      redis.set(
+        "lock_key_4",
+        "not_a_valid_json",
+        nx: true,
+        px: 60 * 1000,
+      )
+
       example.run
     end
 
     redis.del("lock_key_1")
     redis.del("lock_key_2")
     redis.del("lock_key_3")
+    redis.del("lock_key_4")
   end
 
   describe "#get" do
@@ -101,6 +109,7 @@ RSpec.describe SimpleMutex::Helper do
             { key: "lock_key_1", value: data_1 },
             { key: "lock_key_2", value: data_2 },
             { key: "lock_key_3", value: data_3 },
+            { key: "lock_key_4", value: "not_a_valid_json" },
           ),
         )
       end
@@ -125,6 +134,16 @@ RSpec.describe SimpleMutex::Helper do
         expect(list).to(
           contain_exactly(
             { key: "lock_key_2", value: data_2 },
+          ),
+        )
+      end
+    end
+
+    context "when called with unknown mode" do
+      it "raises error" do
+        expect { described_class.list(mode: :not_a_valid_mode) }.to(
+          raise_error(
+            SimpleMutex::Error, "invalid mode ( only [:job, :batch, :default, :all] allowed)."
           ),
         )
       end

@@ -24,7 +24,7 @@ module SimpleMutex
         %w[payload bid]
       end
 
-      def active_entity_ids
+      def get_active_entity_ids
         ::Sidekiq::BatchSet.new.map(&:bid)
       end
     end

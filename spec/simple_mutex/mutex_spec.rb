@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 RSpec.describe SimpleMutex::Mutex do
-  let(:redis_instance) { instance_double(Redis) }
   let(:lock_key) { "test_lock_key" }
 
   let(:options) do
@@ -132,7 +131,7 @@ RSpec.describe SimpleMutex::Mutex do
       describe "#unlock!" do
         context "when called with existing lock_key, valid signature, no force" do
           it "removes key" do
-            described_class.unlock(lock_key, signature: valid_signature, force: false)
+            described_class.unlock!(lock_key, signature: valid_signature, force: false)
             expect(redis.get(lock_key)).to eq(nil)
           end
         end
@@ -148,9 +147,31 @@ RSpec.describe SimpleMutex::Mutex do
           end
         end
 
+        context "when lock data can't be parsed, no force" do
+          let(:data) { "" }
+
+          it "raises error (interprets it as signature mismatch)" do
+            expect do
+              described_class.unlock!(lock_key, force: false)
+            end.to(
+              raise_error(SimpleMutex::Mutex::UnlockError)
+                .with_message("signature mismatch for lock key <#{lock_key}>."),
+            )
+          end
+        end
+
         context "when called with existing lock_key, invalid signature, force" do
           it "removes key" do
             described_class.unlock!(lock_key, signature: invalid_signature, force: true)
+            expect(redis.get(lock_key)).to eq(nil)
+          end
+        end
+
+        context "when lock data can't be parsed, force" do
+          let(:data) { "" }
+
+          it "removes key" do
+            described_class.unlock!(lock_key, force: true)
             expect(redis.get(lock_key)).to eq(nil)
           end
         end
@@ -162,6 +183,22 @@ RSpec.describe SimpleMutex::Mutex do
             end.to(
               raise_error(SimpleMutex::Mutex::UnlockError)
                 .with_message("lock not found for lock key <#{invalid_lock_key}>."),
+            )
+          end
+        end
+
+        context "when both lock key and signature valid but del returns 0" do
+          # mocking methods inside multi results in unpredictable results
+          before do
+            allow(redis).to receive(:multi).and_return([0])
+          end
+
+          it "raises error" do
+            expect do
+              described_class.unlock!(lock_key, signature: valid_signature, force: false)
+            end.to(
+              raise_error(SimpleMutex::Mutex::UnlockError)
+                .with_message("something when wrong when deleting lock key <#{lock_key}>."),
             )
           end
         end
@@ -240,6 +277,42 @@ RSpec.describe SimpleMutex::Mutex do
           expect(redis.get(lock_key)).to eq(expected_data)
         end
         expect(redis.get(lock_key)).to eq(nil)
+      end
+    end
+
+    describe "#lock_obtained?" do
+      context "when lock exists with same signature" do
+        before do
+          instance.lock!
+        end
+
+        it do
+          expect(instance.lock_obtained?).to eq(true)
+        end
+      end
+
+      context "when lock exists with incorrect signature" do
+        before do
+          redis.set(
+            lock_key,
+            JSON.generate(
+              "signature"  => "incorrect_signature",
+              "created_at" => Time.now.to_s,
+              "payload"    => options[:payload],
+            ),
+            nx: true, ex: 60,
+          )
+        end
+
+        it do
+          expect(instance.lock_obtained?).to eq(false)
+        end
+      end
+
+      context "when no lock exists" do
+        it do
+          expect(instance.lock_obtained?).to eq(false)
+        end
       end
     end
   end
