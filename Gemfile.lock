@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    simple_mutex (1.0.0)
+    simple_mutex (1.0.1)
       redis
       redis-namespace
       sidekiq
@@ -85,7 +85,7 @@ GEM
       rubocop (~> 1.0)
     ruby-progressbar (1.11.0)
     ruby2_keywords (0.0.5)
-    sidekiq (6.2.2)
+    sidekiq (6.3.1)
       connection_pool (>= 2.2.2)
       rack (~> 2.0)
       redis (>= 4.2.0)
