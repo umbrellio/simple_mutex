@@ -122,6 +122,12 @@ RSpec.describe SimpleMutex::SidekiqSupport::BatchCleaner do
             [:error, "Trying to delete row with key <#{lock_for_non_existent_batch_key.inspect}> "\
                      "and value <#{lock_for_non_existent_batch_value.inspect}>. "\
                      "MULTI returned value <[]>."],
+            [:error, "Trying to delete row with key <#{lock_for_non_existent_batch_key.inspect}> "\
+                     "and value <#{lock_for_non_existent_batch_value.inspect}>. "\
+                     "MULTI returned value <[]>."],
+            [:error, "Trying to delete row with key <#{lock_for_non_existent_batch_key.inspect}> "\
+                     "and value <#{lock_for_non_existent_batch_value.inspect}>. "\
+                     "MULTI returned value <[]>."],
             [:info, "END #{described_class.name}"],
           ]
 

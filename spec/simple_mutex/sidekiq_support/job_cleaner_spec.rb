@@ -120,6 +120,12 @@ RSpec.describe SimpleMutex::SidekiqSupport::JobCleaner do
             [:error, "Trying to delete row with key <#{lock_for_non_existent_job_key.inspect}> "\
                      "and value <#{lock_for_non_existent_job_value.inspect}>. "\
                      "MULTI returned value <[]>."],
+            [:error, "Trying to delete row with key <#{lock_for_non_existent_job_key.inspect}> "\
+                     "and value <#{lock_for_non_existent_job_value.inspect}>. "\
+                     "MULTI returned value <[]>."],
+            [:error, "Trying to delete row with key <#{lock_for_non_existent_job_key.inspect}> "\
+                     "and value <#{lock_for_non_existent_job_value.inspect}>. "\
+                     "MULTI returned value <[]>."],
             [:info, "END #{described_class.name}"],
           ]
 
