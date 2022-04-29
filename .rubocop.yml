@@ -12,3 +12,6 @@ Layout/HashAlignment:
 Naming/VariableNumber:
   Exclude:
     - 'spec/**/*'
+
+Performance/StringIdentifierArgument:
+  Enabled: false

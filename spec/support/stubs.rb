@@ -68,7 +68,6 @@ RSpec.shared_context "batch_stub" do
         end
       end
 
-      # rubocop:disable Performance/StringIdentifierArgument
       def execute_callbacks(event)
         status = Object.const_get("Sidekiq::Batch::Status").new(bid)
 
@@ -76,7 +75,6 @@ RSpec.shared_context "batch_stub" do
           execute_callback(event, target, status, options)
         end
       end
-      # rubocop:enable Performance/StringIdentifierArgument
     end
 
     stub_const("Sidekiq::Batch", batch_class)

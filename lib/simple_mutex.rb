@@ -31,7 +31,7 @@ module SimpleMutex
   end
 
   def sidekiq_pro_installed?
-    Object.const_defined?(:"Sidekiq::Pro::VERSION")
+    Object.const_defined?("Sidekiq::Pro::VERSION")
   end
 
   def no_redis_error

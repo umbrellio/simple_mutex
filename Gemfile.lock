@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    simple_mutex (1.0.1)
+    simple_mutex (1.0.2)
       redis
       redis-namespace
       sidekiq
