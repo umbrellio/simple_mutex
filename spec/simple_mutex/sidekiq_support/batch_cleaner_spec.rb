@@ -39,6 +39,7 @@ RSpec.describe SimpleMutex::SidekiqSupport::BatchCleaner do
 
   include_context "sidekiq pro defined"
 
+  # rubocop:disable Style/OpenStructUse
   before do
     batch_set_class = Class.new(Array)
 
@@ -48,6 +49,7 @@ RSpec.describe SimpleMutex::SidekiqSupport::BatchCleaner do
       Sidekiq::BatchSet.new([OpenStruct.new(bid: present_batch_bid)]),
     )
   end
+  # rubocop:enable Style/OpenStructUse
 
   describe "#unlock_dead_batches" do
     around do |example|

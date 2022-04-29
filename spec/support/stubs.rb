@@ -69,7 +69,7 @@ RSpec.shared_context "batch_stub" do
       end
 
       def execute_callbacks(event)
-        status = Object.const_get("Sidekiq::Batch::Status").new(bid)
+        status = Object.const_get(:"Sidekiq::Batch::Status").new(bid)
 
         callbacks_stack[event]&.each do |target, options|
           execute_callback(event, target, status, options)

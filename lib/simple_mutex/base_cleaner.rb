@@ -94,8 +94,8 @@ module SimpleMutex
 
     def generate_log_msg(lock_key, raw_data, return_value)
       "Trying to delete row with key <#{lock_key.inspect}> "\
-      "and value <#{raw_data.inspect}>. "\
-      "MULTI returned value <#{return_value.inspect}>."
+        "and value <#{raw_data.inspect}>. "\
+        "MULTI returned value <#{return_value.inspect}>."
     end
 
     def redis

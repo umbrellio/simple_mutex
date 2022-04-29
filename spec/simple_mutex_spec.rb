@@ -39,7 +39,7 @@ RSpec.describe SimpleMutex do
   describe "#sidekiq_pro_check!" do
     context "no sidekiq pro" do
       before do
-        allow(Object).to receive(:const_defined?).with("Sidekiq::Pro::VERSION").and_return(false)
+        allow(Object).to receive(:const_defined?).with(:"Sidekiq::Pro::VERSION").and_return(false)
       end
 
       it "raises error" do
@@ -54,7 +54,7 @@ RSpec.describe SimpleMutex do
 
     context "sidekiq pro installed" do
       before do
-        allow(Object).to receive(:const_defined?).with("Sidekiq::Pro::VERSION").and_return(true)
+        allow(Object).to receive(:const_defined?).with(:"Sidekiq::Pro::VERSION").and_return(true)
       end
 
       it "does not raise error" do
