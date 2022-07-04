@@ -2,35 +2,54 @@
 
 module SimpleMutex
   class BaseCleaner
+    MAX_DEL_ATTEMPTS = 3
+
+    class SynchronizationAnomalyError < ::StandardError; end
+
+    # rubocop:disable Metrics/MethodLength
     def unlock
       ::SimpleMutex.redis_check!
 
       logger&.info(start_msg)
 
       redis.keys.select do |lock_key|
-        redis.watch(lock_key) do
-          raw_data = redis.get(lock_key)
+        attempt = 0
 
-          next redis.unwatch if raw_data.nil?
+        begin
+          redis.watch(lock_key) do
+            raw_data = redis.get(lock_key)
+            raw_data = raw_data.value if raw_data.is_a?(Redis::Future)
 
-          parsed_data = safe_parse(raw_data)
+            next if raw_data.nil?
 
-          next redis.unwatch unless parsed_data&.dig("payload", "type") == type
+            parsed_data = safe_parse(raw_data)
 
-          entity_id = parsed_data&.dig(*path_to_entity_id)
+            next unless parsed_data&.dig("payload", "type") == type
 
-          next redis.unwatch if entity_id.nil? || active?(entity_id)
+            entity_id = parsed_data&.dig(*path_to_entity_id)
 
-          return_value = redis.multi { |multi| multi.del(lock_key) }
+            next if entity_id.nil? || active?(entity_id)
 
-          log_iteration(lock_key, raw_data, return_value) unless logger.nil?
+            return_value = redis.multi { |multi| multi.del(lock_key) }
 
-          return_value&.first&.positive?
+            log_iteration(lock_key, raw_data, return_value) unless logger.nil?
+
+            result = return_value&.first
+
+            raise SynchronizationAnomalyError, "Sync anomaly." unless result.is_a?(Integer)
+
+            result.positive?
+          ensure
+            redis.unwatch
+          end
+        rescue SynchronizationAnomalyError
+          retry if (attempt += 1) < MAX_DEL_ATTEMPTS
         end
       end
 
       logger&.info(end_msg)
     end
+    # rubocop:enable Metrics/MethodLength
 
     private
 
@@ -75,8 +94,8 @@ module SimpleMutex
 
     def generate_log_msg(lock_key, raw_data, return_value)
       "Trying to delete row with key <#{lock_key.inspect}> "\
-      "and value <#{raw_data.inspect}>. "\
-      "MULTI returned value <#{return_value.inspect}>."
+        "and value <#{raw_data.inspect}>. "\
+        "MULTI returned value <#{return_value.inspect}>."
     end
 
     def redis

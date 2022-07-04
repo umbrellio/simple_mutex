@@ -101,6 +101,23 @@ RSpec.describe SimpleMutex::Mutex do
             expect(result).to eq(true)
             expect(redis.get(lock_key)).to eq(nil)
           end
+
+          context "transaction sync error" do
+            before do
+              allow(redis).to receive(:multi).and_return([nil])
+            end
+
+            it do
+              expect(redis).to receive(:multi).exactly(3).times
+
+              expect do
+                described_class.unlock(lock_key, signature: valid_signature, force: false)
+              end.to raise_error(
+                SimpleMutex::Mutex::UnlockError,
+                "repeated synchronization anomaly for <test_lock_key>.",
+              )
+            end
+          end
         end
 
         context "when called with existing lock_key, invalid signature, no force" do
@@ -133,6 +150,22 @@ RSpec.describe SimpleMutex::Mutex do
           it "removes key" do
             described_class.unlock!(lock_key, signature: valid_signature, force: false)
             expect(redis.get(lock_key)).to eq(nil)
+          end
+
+          context "transaction sync error" do
+            before do
+              allow(redis).to receive(:multi).and_return([nil])
+            end
+
+            it do
+              expect(redis).to receive(:multi).exactly(3).times
+              expect do
+                described_class.unlock!(lock_key, signature: valid_signature, force: false)
+              end.to raise_error(
+                SimpleMutex::Mutex::UnlockError,
+                "repeated synchronization anomaly for <test_lock_key>.",
+              )
+            end
           end
         end
 

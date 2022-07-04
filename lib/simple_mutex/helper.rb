@@ -29,39 +29,37 @@ module SimpleMutex
       }
     end
 
-    # rubocop:disable Metrics/MethodLength, Style/HashEachMethods, Performance/CollectionLiteralInLoop
+    # rubocop:disable Style/HashEachMethods
     def list(mode: :default)
       check_mode(mode)
 
       result = []
+      job_types = %i[job default]
+      batch_types = %i[batch default]
 
       redis.keys.each do |lock_key|
-        redis.watch(lock_key) do
-          raw_data = redis.get(lock_key)
+        raw_data = redis.get(lock_key)
 
-          unless raw_data.nil?
-            parsed_data = safe_parse(raw_data)
+        next if raw_data.nil?
 
-            if parsed_data.nil?
-              result << { key: lock_key, value: raw_data } if mode == :all
-            else
-              lock_type = parsed_data&.dig("payload", "type")
+        parsed_data = safe_parse(raw_data)
 
-              if (mode == :all) ||
-                 (lock_type == "Job" && %i[job default].include?(mode)) ||
-                 (lock_type == "Batch" && %i[batch default].include?(mode))
-                result << { key: lock_key, value: parsed_data }
-              end
-            end
+        if parsed_data.nil?
+          result << { key: lock_key, value: raw_data } if mode == :all
+        else
+          lock_type = parsed_data&.dig("payload", "type")
+
+          if (mode == :all) ||
+             (lock_type == "Job" && job_types.include?(mode)) ||
+             (lock_type == "Batch" && batch_types.include?(mode))
+            result << { key: lock_key, value: parsed_data }
           end
-
-          redis.unwatch
         end
       end
 
       result
     end
-    # rubocop:enable Metrics/MethodLength, Style/HashEachMethods, Performance/CollectionLiteralInLoop
+    # rubocop:enable Style/HashEachMethods
 
     private
 

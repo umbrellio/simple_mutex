@@ -6,8 +6,9 @@ require "json"
 module SimpleMutex
   class Mutex
     DEFAULT_EXPIRES_IN = 60 * 60 # 1 hour
+    MAX_DEL_ATTEMPTS = 3
 
-    ERR_MSGS = {
+    ERROR_MESSAGES = {
       unlock: {
         unknown: lambda do |lock_key|
           "something when wrong when deleting lock key <#{lock_key}>."
@@ -18,6 +19,9 @@ module SimpleMutex
         signature_mismatch: lambda do |lock_key|
           "signature mismatch for lock key <#{lock_key}>."
         end,
+        repeated_synchronization_anomaly: lambda do |lock_key|
+          "repeated synchronization anomaly for <#{lock_key}>."
+        end,
       }.freeze,
       lock: {
         basic: lambda do |lock_key|
@@ -25,6 +29,8 @@ module SimpleMutex
         end,
       }.freeze,
     }.freeze
+
+    SynchronizationAnomalyError = Class.new(::StandardError)
 
     BaseError = Class.new(::StandardError) do
       attr_reader :lock_key
@@ -54,41 +60,62 @@ module SimpleMutex
 
         redis = ::SimpleMutex.redis
 
-        redis.watch(lock_key) do
-          raw_data = redis.get(lock_key)
+        attempt = 0
 
-          if raw_data && (force || signature_valid?(raw_data, signature))
-            redis.multi { |multi| multi.del(lock_key) }.first.positive?
-          else
+        begin
+          redis.watch(lock_key) do
+            raw_data = redis.get(lock_key)
+            raw_data = raw_data.value if raw_data.is_a?(Redis::Future)
+
+            return false if raw_data.nil?
+            return false unless force || signature_valid?(raw_data, signature)
+
+            result = redis.multi { |multi| multi.del(lock_key) }.first
+
+            raise SynchronizationAnomalyError, "Sync anomaly." unless result.is_a?(Integer)
+
+            result.positive?
+          ensure
             redis.unwatch
-            false
           end
+        rescue SynchronizationAnomalyError
+          retry if (attempt += 1) < MAX_DEL_ATTEMPTS
+          raise_error(UnlockError, :repeated_synchronization_anomaly, lock_key)
         end
       end
 
+      # rubocop:disable Metrics/MethodLength
       def unlock!(lock_key, signature: nil, force: false)
         ::SimpleMutex.redis_check!
 
         redis = ::SimpleMutex.redis
 
-        redis.watch(lock_key) do
-          raw_data = redis.get(lock_key)
+        attempt = 0
 
-          begin
-            raise_error(UnlockError, :key_not_found, lock_key) unless raw_data
+        begin
+          redis.watch(lock_key) do
+            raw_data = redis.get(lock_key)
+            raw_data = raw_data.value if raw_data.is_a?(Redis::Future)
+
+            raise_error(UnlockError, :key_not_found, lock_key) if raw_data.nil?
 
             unless force || signature_valid?(raw_data, signature)
               raise_error(UnlockError, :signature_mismatch, lock_key)
             end
 
-            success = redis.multi { |multi| multi.del(lock_key) }.first.positive?
+            result = redis.multi { |multi| multi.del(lock_key) }.first
 
-            raise_error(UnlockError, :unknown, lock_key) unless success
+            raise SynchronizationAnomalyError, "Sync anomaly." unless result.is_a?(Integer)
+            raise_error(UnlockError, :unknown, lock_key) unless result.positive?
           ensure
             redis.unwatch
           end
+        rescue SynchronizationAnomalyError
+          retry if (attempt += 1) < MAX_DEL_ATTEMPTS
+          raise_error(UnlockError, :repeated_synchronization_anomaly, lock_key)
         end
       end
+      # rubocop:enable Metrics/MethodLength
 
       def with_lock(lock_key, **options, &block)
         new(lock_key, **options).with_lock(&block)
@@ -96,7 +123,7 @@ module SimpleMutex
 
       def raise_error(error_class, msg_template, lock_key)
         template_base = error_class.name.split("::").last.gsub("Error", "").downcase.to_sym
-        error_msg     = ERR_MSGS[template_base][msg_template].call(lock_key)
+        error_msg     = ERROR_MESSAGES[template_base][msg_template].call(lock_key)
 
         raise(error_class.new(error_msg, lock_key))
       end

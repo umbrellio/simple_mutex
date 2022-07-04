@@ -109,7 +109,7 @@ RSpec.describe SimpleMutex::SidekiqSupport::JobCleaner do
       # key was also not deleted, so we decided to log this
       context "redis del returns nil" do
         before do
-          allow(redis).to receive(:del).and_return(nil)
+          allow(redis).to receive(:multi).and_return([])
         end
 
         it "logs start and with info, deletion attempt with error" do
@@ -117,6 +117,12 @@ RSpec.describe SimpleMutex::SidekiqSupport::JobCleaner do
 
           expected_messages = [
             [:info, "START #{described_class.name}"],
+            [:error, "Trying to delete row with key <#{lock_for_non_existent_job_key.inspect}> "\
+                     "and value <#{lock_for_non_existent_job_value.inspect}>. "\
+                     "MULTI returned value <[]>."],
+            [:error, "Trying to delete row with key <#{lock_for_non_existent_job_key.inspect}> "\
+                     "and value <#{lock_for_non_existent_job_value.inspect}>. "\
+                     "MULTI returned value <[]>."],
             [:error, "Trying to delete row with key <#{lock_for_non_existent_job_key.inspect}> "\
                      "and value <#{lock_for_non_existent_job_value.inspect}>. "\
                      "MULTI returned value <[]>."],
