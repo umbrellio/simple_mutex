@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.3]
+- Redis-namespace dependency moved to development dependency.
+- Update 'redis' and 'redis-namespace' to the latest version to support redis-sentinel.
+
 ## [1.0.2]
 - Redis-namespace dependency now requires version 1.8.2 or more recent, because thread safety was broken in 1.8.1
 - Adds processing for case when `watch` fails in redis transactions (during unlocking).

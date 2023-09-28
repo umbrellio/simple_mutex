@@ -26,12 +26,12 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_runtime_dependency "redis"
-  spec.add_runtime_dependency "redis-namespace", ">= 1.8.2"
   spec.add_runtime_dependency "sidekiq"
 
   spec.add_development_dependency "bundler"
   spec.add_development_dependency "bundler-audit"
   spec.add_development_dependency "mock_redis"
+  spec.add_development_dependency "redis-namespace", ">= 1.8.2"
   spec.add_development_dependency "rspec"
   spec.add_development_dependency "rubocop"
   spec.add_development_dependency "rubocop-config-umbrellio"

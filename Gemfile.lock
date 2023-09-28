@@ -3,7 +3,6 @@ PATH
   specs:
     simple_mutex (1.0.2)
       redis
-      redis-namespace (>= 1.8.2)
       sidekiq
 
 GEM
@@ -113,6 +112,7 @@ DEPENDENCIES
   bundler
   bundler-audit
   mock_redis
+  redis-namespace (>= 1.8.2)
   rspec
   rubocop
   rubocop-config-umbrellio
