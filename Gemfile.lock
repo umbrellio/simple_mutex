@@ -1,8 +1,8 @@
 PATH
   remote: .
   specs:
-    simple_mutex (1.0.2)
-      redis
+    simple_mutex (1.1.0)
+      redis (>= 5.0)
       sidekiq
 
 GEM
@@ -86,10 +86,10 @@ GEM
       rubocop (~> 1.0)
     ruby-progressbar (1.11.0)
     ruby2_keywords (0.0.5)
-    sidekiq (6.5.1)
+    sidekiq (6.5.5)
       connection_pool (>= 2.2.2)
       rack (~> 2.0)
-      redis (>= 4.2.0)
+      redis (>= 4.5.0)
     simplecov (0.21.2)
       docile (~> 1.1)
       simplecov-html (~> 0.11)

@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.0.3]
+## [1.1.0]
 - Redis-namespace dependency moved to development dependency.
 - Update 'redis' and 'redis-namespace' to the latest version to support redis-sentinel.
 
