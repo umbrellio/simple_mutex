@@ -13,7 +13,7 @@ Gem::Specification.new do |spec|
   spec.homepage      = "https://github.com/umbrellio/simple_mutex"
   spec.license       = "MIT"
 
-  spec.required_ruby_version = Gem::Requirement.new(">= 2.6.0")
+  spec.required_ruby_version = Gem::Requirement.new(">= 3.2.0")
 
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
@@ -28,15 +28,15 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency "redis", ">= 5.0"
   spec.add_runtime_dependency "sidekiq"
 
-  spec.add_development_dependency "bundler"
-  spec.add_development_dependency "bundler-audit"
-  spec.add_development_dependency "mock_redis"
-  spec.add_development_dependency "redis-namespace", ">= 1.8.2"
-  spec.add_development_dependency "rspec"
-  spec.add_development_dependency "rubocop"
-  spec.add_development_dependency "rubocop-config-umbrellio"
-  spec.add_development_dependency "rubocop-rspec"
-  spec.add_development_dependency "simplecov"
-  spec.add_development_dependency "simplecov-lcov"
-  spec.add_development_dependency "timecop"
+  spec.add_development_dependency "bundler", "~> 2.4", ">= 2.4.20"
+  spec.add_development_dependency "bundler-audit", "~> 0.9.1"
+  spec.add_development_dependency "mock_redis", "~> 0.37.0"
+  spec.add_development_dependency "redis-namespace", "~> 1.11"
+  spec.add_development_dependency "rspec", "~> 3.12"
+  spec.add_development_dependency "rubocop", "~> 1.50", ">= 1.50"
+  spec.add_development_dependency "rubocop-config-umbrellio", "~> 1.50", ">= 1.50.0.85"
+  spec.add_development_dependency "rubocop-rspec", "~> 2.20", ">= 2.20"
+  spec.add_development_dependency "simplecov", "~> 0.22.0"
+  spec.add_development_dependency "simplecov-lcov", "~> 0.8.0"
+  spec.add_development_dependency "timecop", "~> 0.9.8"
 end

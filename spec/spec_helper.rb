@@ -25,7 +25,7 @@ require "mock_redis"
 
 require_relative "support/stubs"
 
-Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].sort.each { |file| require file }
+Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each { |file| require file }
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

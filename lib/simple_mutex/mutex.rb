@@ -117,8 +117,8 @@ module SimpleMutex
       end
       # rubocop:enable Metrics/MethodLength
 
-      def with_lock(lock_key, **options, &block)
-        new(lock_key, **options).with_lock(&block)
+      def with_lock(lock_key, **options, &)
+        new(lock_key, **options).with_lock(&)
       end
 
       def raise_error(error_class, msg_template, lock_key)
@@ -156,7 +156,7 @@ module SimpleMutex
     end
 
     def unlock(force: false)
-      self.class.unlock(lock_key, signature: signature, force: force)
+      self.class.unlock(lock_key, signature:, force:)
     end
 
     def with_lock
@@ -178,7 +178,7 @@ module SimpleMutex
     end
 
     def unlock!(force: false)
-      self.class.unlock!(lock_key, signature: signature, force: force)
+      self.class.unlock!(lock_key, signature:, force:)
     end
 
     private

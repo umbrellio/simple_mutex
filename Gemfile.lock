@@ -8,13 +8,19 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
-    activesupport (6.1.7.6)
+    activesupport (7.1.0)
+      base64
+      bigdecimal
       concurrent-ruby (~> 1.0, >= 1.0.2)
+      connection_pool (>= 2.2.5)
+      drb
       i18n (>= 1.6, < 2)
       minitest (>= 5.1)
+      mutex_m
       tzinfo (~> 2.0)
-      zeitwerk (~> 2.3)
     ast (2.4.2)
+    base64 (0.1.1)
+    bigdecimal (3.1.4)
     bundler-audit (0.9.1)
       bundler (>= 1.2.0, < 3)
       thor (~> 1.0)
@@ -22,20 +28,20 @@ GEM
     connection_pool (2.4.1)
     diff-lcs (1.5.0)
     docile (1.4.0)
+    drb (2.1.1)
+      ruby2_keywords
     i18n (1.14.1)
       concurrent-ruby (~> 1.0)
     json (2.6.3)
     minitest (5.20.0)
-    mock_redis (0.36.0)
-      ruby2_keywords
+    mock_redis (0.37.0)
+    mutex_m (0.1.2)
     parallel (1.23.0)
-    parser (3.2.2.3)
+    parser (3.2.2.4)
       ast (~> 2.4.1)
       racc
     racc (1.7.1)
     rack (3.0.8)
-    rack-protection (3.0.6)
-      rack
     rainbow (3.1.1)
     redis (5.0.7)
       redis-client (>= 0.9.0)
@@ -70,7 +76,7 @@ GEM
       unicode-display_width (>= 2.4.0, < 3.0)
     rubocop-ast (1.29.0)
       parser (>= 3.2.1.0)
-    rubocop-capybara (2.18.0)
+    rubocop-capybara (2.19.0)
       rubocop (~> 1.41)
     rubocop-config-umbrellio (1.50.0.85)
       rubocop (~> 1.50.0)
@@ -95,11 +101,11 @@ GEM
       rubocop (~> 1.0)
     ruby-progressbar (1.13.0)
     ruby2_keywords (0.0.5)
-    sidekiq (6.0.4)
-      connection_pool (>= 2.2.2)
-      rack (>= 2.0.0)
-      rack-protection (>= 2.0.0)
-      redis (>= 4.1.0)
+    sidekiq (7.1.5)
+      concurrent-ruby (< 2)
+      connection_pool (>= 2.3.0)
+      rack (>= 2.2.4)
+      redis-client (>= 0.14.0)
     simplecov (0.22.0)
       docile (~> 1.1)
       simplecov-html (~> 0.11)
@@ -112,25 +118,23 @@ GEM
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
     unicode-display_width (2.5.0)
-    zeitwerk (2.6.12)
 
 PLATFORMS
   x86_64-darwin-21
-  x86_64-linux
 
 DEPENDENCIES
-  bundler
-  bundler-audit
-  mock_redis
-  redis-namespace (>= 1.8.2)
-  rspec
-  rubocop
-  rubocop-config-umbrellio
-  rubocop-rspec
+  bundler (~> 2.4, >= 2.4.20)
+  bundler-audit (~> 0.9.1)
+  mock_redis (~> 0.37.0)
+  redis-namespace (~> 1.11)
+  rspec (~> 3.12)
+  rubocop (~> 1.50, >= 1.50)
+  rubocop-config-umbrellio (~> 1.50, >= 1.50.0.85)
+  rubocop-rspec (~> 2.20, >= 2.20)
   simple_mutex!
-  simplecov
-  simplecov-lcov
-  timecop
+  simplecov (~> 0.22.0)
+  simplecov-lcov (~> 0.8.0)
+  timecop (~> 0.9.8)
 
 BUNDLED WITH
-   2.3.17
+   2.4.20

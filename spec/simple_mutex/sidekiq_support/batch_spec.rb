@@ -12,7 +12,7 @@ RSpec.describe SimpleMutex::SidekiqSupport::Batch do
 
     let(:batch) do
       batch = SimpleMutex::SidekiqSupport::Batch.new(
-        lock_key: lock_key,
+        lock_key:,
         expires_in: 60 * 1000,
       )
 
