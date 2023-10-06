@@ -20,12 +20,12 @@ module SimpleMutex
         self.expires_in       = expires_in
       end
 
-      def with_redlock(&)
+      def with_redlock(&block)
         ::SimpleMutex::Mutex.with_lock(
           lock_key || generate_lock_key,
-          expires_in:,
+          expires_in: expires_in,
           payload:    generate_payload,
-          &
+          &block
         )
       end
 

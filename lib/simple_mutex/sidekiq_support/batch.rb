@@ -23,13 +23,13 @@ module SimpleMutex
         self.batch      = ::Sidekiq::Batch.new
       end
 
-      def jobs(&)
+      def jobs(&block)
         mutex.lock!
 
         set_callbacks(mutex.signature)
 
         begin
-          batch.jobs(&)
+          batch.jobs(&block)
         rescue => error
           mutex.unlock!
           raise error
@@ -52,7 +52,7 @@ module SimpleMutex
 
         @mutex = ::SimpleMutex::Mutex.new(
           lock_key,
-          expires_in:,
+          expires_in: expires_in,
           payload:    generate_payload(batch),
         )
       end
