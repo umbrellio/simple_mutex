@@ -3,8 +3,10 @@
 All notable changes to this project will be documented in this file.
 
 ## [1.1.0]
+- Updated Ruby version to 2.7, because version below is no longer officially used.
+- Update 'redis' to the latest version to support redis-sentinel.
 - Redis-namespace dependency moved to development dependency.
-- Update 'redis' and 'redis-namespace' to the latest version to support redis-sentinel.
+- Lock development dependency gem versions.
 
 ## [1.0.2]
 - Redis-namespace dependency now requires version 1.8.2 or more recent, because thread safety was broken in 1.8.1
