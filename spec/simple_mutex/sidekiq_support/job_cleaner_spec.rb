@@ -95,8 +95,8 @@ RSpec.describe SimpleMutex::SidekiqSupport::JobCleaner do
 
           expected_messages = [
             [:info, "START #{described_class.name}"],
-            [:info, "Trying to delete row with key <#{lock_for_non_existent_job_key.inspect}> "\
-                    "and value <#{lock_for_non_existent_job_value.inspect}>. "\
+            [:info, "Trying to delete row with key <#{lock_for_non_existent_job_key.inspect}> " \
+                    "and value <#{lock_for_non_existent_job_value.inspect}>. " \
                     "MULTI returned value <[1]>."],
             [:info, "END #{described_class.name}"],
           ]
@@ -117,14 +117,14 @@ RSpec.describe SimpleMutex::SidekiqSupport::JobCleaner do
 
           expected_messages = [
             [:info, "START #{described_class.name}"],
-            [:error, "Trying to delete row with key <#{lock_for_non_existent_job_key.inspect}> "\
-                     "and value <#{lock_for_non_existent_job_value.inspect}>. "\
+            [:error, "Trying to delete row with key <#{lock_for_non_existent_job_key.inspect}> " \
+                     "and value <#{lock_for_non_existent_job_value.inspect}>. " \
                      "MULTI returned value <[]>."],
-            [:error, "Trying to delete row with key <#{lock_for_non_existent_job_key.inspect}> "\
-                     "and value <#{lock_for_non_existent_job_value.inspect}>. "\
+            [:error, "Trying to delete row with key <#{lock_for_non_existent_job_key.inspect}> " \
+                     "and value <#{lock_for_non_existent_job_value.inspect}>. " \
                      "MULTI returned value <[]>."],
-            [:error, "Trying to delete row with key <#{lock_for_non_existent_job_key.inspect}> "\
-                     "and value <#{lock_for_non_existent_job_value.inspect}>. "\
+            [:error, "Trying to delete row with key <#{lock_for_non_existent_job_key.inspect}> " \
+                     "and value <#{lock_for_non_existent_job_value.inspect}>. " \
                      "MULTI returned value <[]>."],
             [:info, "END #{described_class.name}"],
           ]

@@ -2,7 +2,7 @@ inherit_gem:
   rubocop-config-umbrellio: lib/rubocop.yml
 
 AllCops:
-  TargetRubyVersion: 2.6
+  TargetRubyVersion: 2.7
 
 Layout/HashAlignment:
   EnforcedHashRocketStyle:
@@ -11,6 +11,9 @@ Layout/HashAlignment:
   EnforcedColonStyle:
     - key
     - table
+
+RSpec/IndexedLet:
+  Max: 3
 
 Naming/VariableNumber:
   Exclude:

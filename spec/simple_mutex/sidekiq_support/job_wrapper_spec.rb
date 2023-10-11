@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "sidekiq/worker"
-
 RSpec.describe SimpleMutex::SidekiqSupport::JobWrapper do
   let(:redis)             { SimpleMutex.redis }
   let(:jid)               { "08e6a309cf7c46dc0178c53f" }
@@ -52,9 +50,9 @@ RSpec.describe SimpleMutex::SidekiqSupport::JobWrapper do
     it "creates mutex that exists while block is executed" do
       described_class.new(
         job,
-        params:           params,
+        params: params,
         lock_with_params: true,
-        expires_in:       60,
+        expires_in: 60,
       ).with_redlock do
         job.run_tests
       end
@@ -68,8 +66,8 @@ RSpec.describe SimpleMutex::SidekiqSupport::JobWrapper do
       it "created mutex with overriden lock_key" do
         described_class.new(
           job,
-          params:     params,
-          lock_key:   lock_key,
+          params: params,
+          lock_key: lock_key,
           expires_in: 60,
         ).with_redlock do
           job.run_tests

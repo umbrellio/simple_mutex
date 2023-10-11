@@ -78,7 +78,7 @@ RSpec.describe SimpleMutex::Helper do
   end
 
   describe "#get" do
-    it "works" do
+    it "getting lock" do
       expect(described_class.get("lock_key_1")).to eq(
         key: "lock_key_1",
         value: data_1,
@@ -88,7 +88,7 @@ RSpec.describe SimpleMutex::Helper do
 
   describe "#list" do
     context "when mode: :default" do
-      it "works" do
+      it "return job and batch locks" do
         list = described_class.list(mode: :default)
 
         expect(list).to(
@@ -101,7 +101,7 @@ RSpec.describe SimpleMutex::Helper do
     end
 
     context "when mode: :all" do
-      it "works" do
+      it "return all locks including manual" do
         list = described_class.list(mode: :all)
 
         expect(list).to(
@@ -116,7 +116,7 @@ RSpec.describe SimpleMutex::Helper do
     end
 
     context "when mode: :job" do
-      it "works" do
+      it "return job locks" do
         list = described_class.list(mode: :job)
 
         expect(list).to(
@@ -128,7 +128,7 @@ RSpec.describe SimpleMutex::Helper do
     end
 
     context "when mode: :batch" do
-      it "works" do
+      it "return batch locks" do
         list = described_class.list(mode: :batch)
 
         expect(list).to(

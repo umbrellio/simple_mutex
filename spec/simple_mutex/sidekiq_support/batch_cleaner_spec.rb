@@ -98,8 +98,8 @@ RSpec.describe SimpleMutex::SidekiqSupport::BatchCleaner do
 
           expected_messages = [
             [:info, "START #{described_class.name}"],
-            [:info, "Trying to delete row with key <#{lock_for_non_existent_batch_key.inspect}> "\
-                    "and value <#{lock_for_non_existent_batch_value.inspect}>. "\
+            [:info, "Trying to delete row with key <#{lock_for_non_existent_batch_key.inspect}> " \
+                    "and value <#{lock_for_non_existent_batch_value.inspect}>. " \
                     "MULTI returned value <[1]>."],
             [:info, "END #{described_class.name}"],
           ]
@@ -121,14 +121,14 @@ RSpec.describe SimpleMutex::SidekiqSupport::BatchCleaner do
 
           expected_messages = [
             [:info, "START #{described_class.name}"],
-            [:error, "Trying to delete row with key <#{lock_for_non_existent_batch_key.inspect}> "\
-                     "and value <#{lock_for_non_existent_batch_value.inspect}>. "\
+            [:error, "Trying to delete row with key <#{lock_for_non_existent_batch_key.inspect}> " \
+                     "and value <#{lock_for_non_existent_batch_value.inspect}>. " \
                      "MULTI returned value <[]>."],
-            [:error, "Trying to delete row with key <#{lock_for_non_existent_batch_key.inspect}> "\
-                     "and value <#{lock_for_non_existent_batch_value.inspect}>. "\
+            [:error, "Trying to delete row with key <#{lock_for_non_existent_batch_key.inspect}> " \
+                     "and value <#{lock_for_non_existent_batch_value.inspect}>. " \
                      "MULTI returned value <[]>."],
-            [:error, "Trying to delete row with key <#{lock_for_non_existent_batch_key.inspect}> "\
-                     "and value <#{lock_for_non_existent_batch_value.inspect}>. "\
+            [:error, "Trying to delete row with key <#{lock_for_non_existent_batch_key.inspect}> " \
+                     "and value <#{lock_for_non_existent_batch_value.inspect}>. " \
                      "MULTI returned value <[]>."],
             [:info, "END #{described_class.name}"],
           ]
